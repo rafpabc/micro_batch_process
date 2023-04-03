@@ -1,0 +1,4 @@
+The main python script in this process is commented, so you can follow the logic behind the task asked.
+It is VERY important to note that for this script to work you will have to create the necessary tables in a schema of your own, the schema I used here is a local one.
+The sql script can create the tables, but the schema should be created in the dbms (in this case i used mysql)
+Also, once this is done, the connection parameters in the functions of the python script should be updated with the right ones.
