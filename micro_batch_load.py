@@ -81,14 +81,22 @@ def read_micro_batch(output_sum,output_divisor,output_min,output_max,folder): #w
                     else:
                         pass
                 else:
-                    pass #the important here is that we are only storing a cumulative value, we are not querying nothing from the table each time we need to produce these
+                    pass #the important here is that we are only storing a cumulative value, we are querying nothing from the table each time we need to produce these
                 
+                insert_query_stats = "INSERT INTO stats_table VALUES (%s,%s,%s,%s);"
+                cursor.execute(insert_query_stats,(divisor-1,average_price,min_price,max_price))
+                pragma_connection.commit() #i also created a table in the db to store the statistics values that is produced row by row, so the whole story of these can be queried if necessary
+
             print("Number of rows in table: "+str(row_count))
             print("Average price is: "+str(average_price))
             print("Minimum price is: "+str(min_price))
-            print("Maximum price is: "+str(max_price))
+            print("Maximum price is: "+str(max_price)) #my preferred solution, as i understand the exercise is this, however, just displaying the values so the user can know what is happening in real time and then validate
+            #but i think that having the other table can be useful to see what could had gone wrong in a given moment or review the whole story of the statistics.
             
-            time.sleep(0.4) #im just adding this so the process can be seen as it is happening, because its so fast, however this can be commented out
+
+
+
+            time.sleep(0.3) #im just adding this so the process can be seen as it is happening, because its so fast, however this can be commented out
         print("Connected to db: " + str(pragma_connection.is_connected()))
     return row_count,average_price,min_price,max_price
 
@@ -141,10 +149,8 @@ folder = [x for x in folder if x == 'validation.csv']
 validation(*read_micro_batch(*stored_values(),folder))
 
 
-
-
 def delete_everything(): #in case you want to start again from 0, uncomment the execution of this function.
-    delete_query = "DELETE FROM pragma_table;"
+    delete_query = "DELETE FROM pragma_table;" #you can change this table if you want to delete the values on the one that stores all the statistics
     with mysql.connector.connect(user='root', password='pragma_test',
                                     host='localhost',database='pragma_schema') as pragma_connection:
         cursor = pragma_connection.cursor()
@@ -153,5 +159,17 @@ def delete_everything(): #in case you want to start again from 0, uncomment the 
 
 #delete_everything()
 
+def check_stats(): #in case you want to check the values stored outside the dbms you can use this
+    select_query = "SELECT * FROM stats_table;" #you can change this table if you want to check the values on the other table
+    with mysql.connector.connect(user='root', password='pragma_test',
+                                    host='localhost',database='pragma_schema') as pragma_connection:
+        cursor = pragma_connection.cursor()
+        cursor.execute(select_query)
+        select_output = cursor.fetchall()
+        select_output = pd.DataFrame(select_output)
+        select_output.columns = ['id','avg_price','min_price','max_price']
+    return select_output
+
+#check_stats()
 
 
